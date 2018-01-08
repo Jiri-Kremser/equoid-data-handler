@@ -64,7 +64,7 @@ def sendSale(rdd):
 
 app = Flask(__name__)
 
-#batchIntervalSeconds = 5
+batchIntervalSeconds = 5
 
 #spark = SparkSession.builder \
 #        .appName("equoid-data-handler") \
@@ -92,9 +92,9 @@ def makeStream():
 #counts = msgs.map(lambda item: (item, 1)).reduceByKey(lambda a, b: a + b)
 #counts.pprint()
 
-#ssc = StreamingContext.getActiveOrCreate("/tmp/spark-streaming-amqp",makeStream)
-#ssc.start()
-#ssc.awaitTerminationOrTimeout(batchIntervalSeconds * 2)
+ssc = StreamingContext.getActiveOrCreate("/tmp/spark-streaming-amqp",makeStream)
+ssc.start()
+ssc.awaitTerminationOrTimeout(batchIntervalSeconds * 2)
 
 def top(request):
     curs.execute("SELECT * FROM sales ORDER BY quantity DESC LIMIT {}" \

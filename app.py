@@ -66,10 +66,10 @@ app = Flask(__name__)
 
 batchIntervalSeconds = 5
 
-#spark = SparkSession.builder \
-#        .appName("equoid-data-handler") \
-#        .config("spark.streaming.receiver.writeAheadLog.enable", "true") \
-#        .getOrCreate()
+spark = SparkSession.builder \
+        .appName("equoid-data-handler") \
+        .config("spark.streaming.receiver.writeAheadLog.enable", "true") \
+        .getOrCreate()
 
 def makeStream():
     sc = spark.sparkContext 

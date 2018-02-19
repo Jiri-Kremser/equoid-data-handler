@@ -124,11 +124,18 @@ object dataHandler {
     val receiveStream = AMQPUtils.createStream(ssc, amqpHost, amqpPort, username, password, address, messageConverter _, StorageLevel.MEMORY_ONLY)
     
     val saleStream = receiveStream.foreachRDD{ rdd =>
+      println(s"\n\nreceiveStream.foreachRDD: $rdd")
       rdd.foreach { record =>
 //        storeSale(record)
-        println(s"\n\nrdd.foreach: $record")
+        println(s"\n\nrdd.foreach1: $record")
+        println(s"\n\nrdd.foreach2: $ttk")
+        println(s"\n\nrdd.foreach3: ${ttk.topk}")
         ttk+record
+        println(s"\n\nrdd.foreach4: $ttk")
+        println(s"\n\nrdd.foreach5: ${ttk.topk}")
       }
+      println(s"\n\nstoreTopK1: ${ttk.topk}")
+      println(s"\n\nstoreTopK2: $ttk")
       storeTopK(ttk.topk) 
     }
     ssc

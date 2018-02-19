@@ -101,11 +101,15 @@ object dataHandler {
   }
   
   def storeTopK(topk: immutable.Map[String, Int]): Unit = {
+    println(s"storeTopK: topk=$topk")
     val builder: ConfigurationBuilder = new ConfigurationBuilder()
     builder.addServer().host(infinispanHost).port(infinispanPort)
     val cacheManager = new RemoteCacheManager(builder.build())
     val cache = cacheManager.getCache[String, Integer]()
-    for ((k,v) <- topk) cache.put(k, v) 
+    for ((k,v) <- topk) {
+      println(s"\n\nwriting to infinispan ($k,$v)")
+      cache.put(k, v) 
+    }
     cacheManager.stop()
   }
 
@@ -122,6 +126,7 @@ object dataHandler {
     val saleStream = receiveStream.foreachRDD{ rdd =>
       rdd.foreach { record =>
 //        storeSale(record)
+        println(s"\n\nrdd.foreach: $record")
         ttk+record
       }
       storeTopK(ttk.topk) 

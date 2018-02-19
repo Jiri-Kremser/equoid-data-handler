@@ -122,22 +122,22 @@ object dataHandler {
     ssc.checkpoint(checkpointDir)
     
     val receiveStream = AMQPUtils.createStream(ssc, amqpHost, amqpPort, username, password, address, messageConverter _, StorageLevel.MEMORY_ONLY)
-    
-    val saleStream = receiveStream.foreachRDD{ rdd =>
+    val saleStream = receiveStream.foreachRDD(rdd => {
       println(s"\n\nreceiveStream.foreachRDD: $rdd")
+      var rddtopk: TopK[String] = TopK.empty[String](10)
       rdd.foreach { record =>
-//        storeSale(record)
         println(s"\n\nrdd.foreach1: $record")
-        println(s"\n\nrdd.foreach2: $ttk")
+        println(s"\n\nrdd.foreach2: ${ttk.topk}")
+        rddtopk += record
         println(s"\n\nrdd.foreach3: ${ttk.topk}")
-        ttk = ttk + record
-        println(s"\n\nrdd.foreach4: $ttk")
-        println(s"\n\nrdd.foreach5: ${ttk.topk}")
       }
       println(s"\n\nstoreTopK1: ${ttk.topk}")
       println(s"\n\nstoreTopK2: $ttk")
+      ttk = ttk ++ rddtopk
+      println(s"\n\nstoreTopK3: ${ttk.topk}")
+      println(s"\n\nstoreTopK4: $ttk")
       storeTopK(ttk.topk) 
-    }
+    })
     ssc
   }
 }

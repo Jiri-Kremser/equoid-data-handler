@@ -114,7 +114,7 @@ object dataHandler {
   }
 
   def createStreamingContext(): StreamingContext = {
-    val ttk = TopK.empty[String](10)
+    var ttk = TopK.empty[String](10)
     val conf = new SparkConf().setMaster(master).setAppName(appName)
     conf.set("spark.streaming.receiver.writeAheadLog.enable", "true")
     
@@ -130,9 +130,7 @@ object dataHandler {
         println(s"\n\nrdd.foreach1: $record")
         println(s"\n\nrdd.foreach2: $ttk")
         println(s"\n\nrdd.foreach3: ${ttk.topk}")
-        var foo = ttk+record
-        println(s"\n\nrdd.foreach4.2: $foo")
-        println(s"\n\nrdd.foreach4.4: ${foo.topk}")
+        ttk = ttk + record
         println(s"\n\nrdd.foreach4: $ttk")
         println(s"\n\nrdd.foreach5: ${ttk.topk}")
       }

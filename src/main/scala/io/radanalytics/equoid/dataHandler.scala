@@ -130,7 +130,9 @@ object dataHandler {
         println(s"\n\nrdd.foreach1: $record")
         println(s"\n\nrdd.foreach2: $ttk")
         println(s"\n\nrdd.foreach3: ${ttk.topk}")
-        ttk+record
+        var foo = ttk+record
+        println(s"\n\nrdd.foreach4.2: $foo")
+        println(s"\n\nrdd.foreach4.4: ${foo.topk}")
         println(s"\n\nrdd.foreach4: $ttk")
         println(s"\n\nrdd.foreach5: ${ttk.topk}")
       }

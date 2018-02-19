@@ -114,7 +114,7 @@ object dataHandler {
   }
 
   def createStreamingContext(): StreamingContext = {
-    var ttk = TopK.empty[String](10)
+    var globalTopK = TopK.empty[String](10)
     val conf = new SparkConf().setMaster(master).setAppName(appName)
     conf.set("spark.streaming.receiver.writeAheadLog.enable", "true")
     
@@ -124,20 +124,31 @@ object dataHandler {
     val receiveStream = AMQPUtils.createStream(ssc, amqpHost, amqpPort, username, password, address, messageConverter _, StorageLevel.MEMORY_ONLY)
     val saleStream = receiveStream.foreachRDD(rdd => {
       println(s"\n\nreceiveStream.foreachRDD: $rdd")
-      var rddtopk: TopK[String] = TopK.empty[String](10)
-      rdd.foreach { record =>
-        println(s"\n\nrdd.foreach1: $record")
-        println(s"\n\nrdd.foreach2: ${ttk.topk}")
-        rddtopk += record
-        println(s"\n\nrdd.foreach3: ${ttk.topk}")
-      }
-      println(s"\n\nstoreTopK1: ${ttk.topk}")
-      println(s"\n\nstoreTopK2: $ttk")
-      ttk = ttk ++ rddtopk
-      println(s"\n\nstoreTopK3: ${ttk.topk}")
-      println(s"\n\nstoreTopK4: $ttk")
-      storeTopK(ttk.topk) 
+      rdd.foreachPartition(partitionOfRecords => {
+        println(s"\n\nrdd.foreachPartition")
+        val partitionTopK = partitionOfRecords.foldLeft(TopK.empty[String](10))(_+_)
+        println(s"\n\nrdd.foreachPartition(partitionTopK): ${partitionTopK.topk}")
+        globalTopK = globalTopK ++ partitionTopK
+        println(s"\n\nrdd.foreachPartition(globalTopK): ${globalTopK.topk}")
+        storeTopK(globalTopK.topk)
+      })
     })
+    
+    
+    // val saleStream = receiveStream.foreachRDD(rdd => {
+    //   println(s"\n\nreceiveStream.foreachRDD: $rdd")
+    //   var rddtopk: TopK[String] = TopK.empty[String](10)
+    //   rdd.foreach { record =>
+    //     println(s"\n\nrdd.foreach1: $record")
+    //     println(s"\n\nrdd.foreach2: ${ttk.topk}")
+    //     rddtopk = rddtopk + record
+    //     println(s"\n\nrdd.foreach3: ${ttk.topk}")
+    //   }
+    //   println(s"\n\nstoreTopK1: ${ttk.topk}")
+    //   ttk = ttk ++ rddtopk
+    //   println(s"\n\nstoreTopK2: ${ttk.topk}")
+    //   storeTopK(ttk.topk) 
+    // })
     ssc
   }
 }

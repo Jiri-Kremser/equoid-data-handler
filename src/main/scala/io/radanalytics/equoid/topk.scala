@@ -19,6 +19,7 @@ class TopK[V] (
 
   // update the TopK sketch w/ a new element 'v'
   def +(v: V): TopK[V] = {
+    println(s"\n\nTopK +")
     val ecms: CountMinSketch = CountMinSketch.create(epsilon, confidence, 13)
     val ucms: CountMinSketch = ecms.mergeInPlace(this.cms)
     ucms.add(v, 1)
@@ -34,6 +35,7 @@ class TopK[V] (
   
   // combine two TopK sketches, monoidally
   def ++(that: TopK[V]): TopK[V] = {
+    println(s"\n\nTopK ++")
     val ecms: CountMinSketch = CountMinSketch.create(epsilon, confidence, 13)
     val thatcms = ecms.mergeInPlace(that.cms) 
     val ucms = thatcms.mergeInPlace(this.cms)

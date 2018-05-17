@@ -42,7 +42,7 @@ object DataHandler {
     var topkstr: String = ""
 
     for ((key,v) <- topk) topkstr = topkstr + key + ":" + v.toString + ";"
-    println(s"\nStoring top-k:\n$topk\n..for the last $interval into JDG.")
+    println(s"\nStoring top-k:\n$topk\n..for the last $interval seconds into JDG.")
     cache.put(interval + " Seconds", topkstr)
     cacheManager.stop()
   }
@@ -61,17 +61,23 @@ object DataHandler {
     val windowSeconds = getProp("WINDOW_SECONDS", "30").toInt
     val slideSeconds = getProp("SLIDE_SECONDS", "30").toInt
     val batchSeconds = getProp("SLIDE_SECONDS", "30").toInt
-    //val sparkMaster = getProp("SPARK_MASTER", "spark://sparky:7077")
     val conf = new SparkConf() //.setMaster(sparkMaster).setAppName(getClass().getSimpleName())
     conf.set("spark.streaming.receiver.writeAheadLog.enable", "true")
     
     val ssc = new StreamingContext(conf, Seconds(batchSeconds))
     ssc.checkpoint(checkpointDir)
-    
+
+    var firstRun = true
     val receiveStream = AMQPUtils.createStream(ssc, amqpHost, amqpPort, username, password, address, messageConverter _, StorageLevel.MEMORY_ONLY)
       .transform( rdd => {
         rdd.mapPartitions( rows => {
-          Iterator(rows.foldLeft(TopK.empty[String](k, epsilon, confidence))(_ + _))
+          val topK: TopK[String] = rows.foldLeft(TopK.empty[String](k, epsilon, confidence))(_ + _)
+          // store the first batch in JDG so that we can give something to the user
+          if (firstRun) {
+            storeTopK(windowSeconds.toString, topK.topk, infinispanHost, infinispanPort)
+            firstRun = false
+          }
+          Iterator(topK)
         })
       })
       .reduceByWindow(_ ++ _, Seconds(windowSeconds), Seconds(slideSeconds))
